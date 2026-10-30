@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Märchen: adivinhe o conto</title>
+<style>
+:root{--bg:#f3efe6;--ink:#16241d;--mut:#5b6a62;--gold:#9a7634;--card:#fbf8f1;--line:#d9d2c2;box-sizing:border-box;padding:env(safe-area-inset-top,0px) 0 env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1612;--ink:#f0eee8;--mut:#a9b4ad;--gold:#c49e60;--card:#1a2a22;--line:#2c3e34;color-scheme:dark}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,sans-serif;min-height:100vh;display:flex;flex-direction:column;align-items:center}
+.top{width:100%;max-width:460px;padding:16px 18px 6px;display:flex;justify-content:space-between;font-size:14px;color:var(--mut)}
+h1{font:700 22px Georgia,serif;margin:8px 18px 0;text-align:center}
+.sub{margin:2px 18px 12px;color:var(--mut);font-size:14px;text-align:center}
+.scene{perspective:1100px;width:min(86vw,360px);height:min(118vw,500px);max-height:62vh;cursor:pointer}
+.card{position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}
+.card.f{transform:rotateY(180deg)}
+.face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:2px solid var(--gold);border-radius:18px;background:var(--card);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:22px;text-align:center;overflow:hidden}
+.back{transform:rotateY(180deg);padding:0;justify-content:flex-start}
+.de{font:700 26px/1.2 Georgia,serif;margin:0 0 14px}
+.tag{font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:12px}
+.tx{font-size:15.5px;color:var(--mut);margin:0}
+.cover{width:100%;flex:0 0 46%;display:flex;align-items:center;justify-content:center;font-size:76px;border-bottom:2px solid var(--gold)}
+.pt{padding:14px 20px 0}.pt h2{font:700 22px/1.2 Georgia,serif;margin:6px 0 8px}
+.hint{margin-top:16px;font-size:13px;color:var(--mut)}
+.row{display:flex;gap:10px;margin:16px 0 8px;min-height:46px}
+button{font:600 15px system-ui,sans-serif;border:1.5px solid var(--gold);background:transparent;color:var(--ink);padding:11px 18px;border-radius:999px;cursor:pointer}
+button.p{background:var(--gold);color:#fff}
+.end{text-align:center;padding:40px 24px}.end b{font:700 44px Georgia,serif;color:var(--gold)}
+.foot{margin:auto 0 14px;padding-top:14px;font:12px Georgia,serif;letter-spacing:.2em;color:var(--mut)}
+</style></head><body>
+<h1>Märchen: adivinhe o conto</h1>
+<p class="sub">Leia em alemão, tente adivinhar e vire a carta.</p>
+<div class="top"><span id="n"></span><span id="sc"></span></div>
+<div id="game"></div>
+<div class="foot">THALES CORRÊA · ADVOGADO</div>
+<script>
+const T=[
+["Schneewittchen","Eine Prinzessin flieht vor ihrer eitlen Stiefmutter zu sieben Zwergen und fällt nach einem vergifteten Apfel in tiefen Schlaf.","Branca de Neve e os Sete Anões","Perseguida pela madrasta invejosa e seu espelho mágico, a princesa se abriga com sete anões e adormece ao morder uma maçã envenenada.","🍎"],
+["Hänsel und Gretel","Zwei ausgesetzte Kinder finden ein Haus aus Lebkuchen. Die Hexe will sie fressen, doch sie überlisten sie.","João e Maria","Abandonados na floresta, dois irmãos encontram uma casa de doces e enganam a bruxa que queria devorá-los.","🏠🍬"],
+["Rotkäppchen","Auf dem Weg zur kranken Großmutter trifft ein Mädchen einen Wolf, der es täuscht, bis ein Jäger es rettet.","Chapeuzinho Vermelho","A caminho da casa da avó, a menina é enganada por um lobo astuto, que é vencido por um caçador.","🐺🧺"],
+["Aschenputtel","Ein misshandeltes Mädchen geht mit Hilfe von Haselbaum und Tauben zum Ball des Königs und gewinnt den Prinzen.","Cinderela (A Gata Borralheira)","Maltratada pela madrasta e pelas meias-irmãs, a jovem vai ao baile com ajuda de uma árvore e de pombos e conquista o príncipe.","👠🕊️"],
+["Rapunzel","Eine Zauberin sperrt ein Mädchen mit langem Haar in einen Turm ohne Tür; ein Prinz klettert an den Zöpfen hinauf.","Rapunzel","Presa numa torre sem portas por uma feiticeira, a jovem deixa as longas tranças descerem para o príncipe subir.","🗼"],
+["Dornröschen","Ein Fluch lässt eine Prinzessin hundert Jahre schlafen, bis ein Prinz die Dornenhecke durchdringt.","A Bela Adormecida","Amaldiçoada a furar o dedo num fuso, a princesa dorme cem anos atrás de uma sebe de espinhos até ser despertada.","🌹💤"],
+["Die Bremer Stadtmusikanten","Vier alte Tiere fliehen vor ihren Herren, wollen Musikanten in Bremen werden und vertreiben unterwegs Räuber.","Os Músicos de Bremen","Um burro, um cão, um gato e um galo fogem dos donos rumo a Bremen e assustam ladrões para tomar a casa deles.","🐴🐶🐱🐓"],
+["Der Froschkönig oder der eiserne Heinrich","Eine Prinzessin verliert ihre goldene Kugel im Brunnen und verspricht einem Frosch viel. Er ist ein verzauberter Prinz.","O Príncipe Sapo","A princesa perde a bolinha de ouro no poço e faz uma promessa a um sapo, que se revela um príncipe encantado.","🐸👑"],
+["Rumpelstilzchen","Ein Männchen spinnt Stroh zu Gold und will dafür das erste Kind der Müllerstochter, außer sie rät seinen Namen.","Rumpelstiltskin","Um duende transforma palha em ouro em troca do primeiro filho da moça, a menos que ela descubra o nome dele.","🧙‍♂️🧵"],
+["Das tapfere Schneiderlein","Ein Schneider erschlägt „sieben auf einen Streich“, gilt als Held und gewinnt mit List ein Königreich.","O Alfaiate Valente","Ao matar sete moscas de uma vez, o alfaiate grava “sete de um golpe” no cinto e usa a astúcia para conquistar um reino.","✂️🪰"],
+["Rattenfänger von Hameln","Ein Pfeifer befreit Hameln von den Ratten. Als man ihn nicht bezahlt, lockt er die Kinder der Stadt fort.","O Flautista de Hamelin","Um caçador de ratos livra a cidade da praga com sua flauta; sem receber o pagamento, leva embora as crianças.","🎶🐀"],
+["Der Wolf und die sieben jungen Geißlein","Ein Wolf täuscht die Geißlein, um ins Haus zu kommen und sie zu fressen. Die Mutter rettet sie.","O Lobo e os Sete Cabritinhos","Disfarçado, o lobo engana os cabritinhos para entrar em casa, mas a mãe cabra chega a tempo de salvá-los.","🐺🐐"],
+["Frau Holle","Ein fleißiges Mädchen dient Frau Holle, schüttelt die Betten, dass es schneit, und wird mit Gold belohnt.","Dona Holle (Mãe Hulda)","A menina trabalha para a senhora Holle, cujo travesseiro sacudido faz nevar, e é recompensada pelo esforço.","❄️🛏️"],
+["Die Sterntaler","Ein armes, gütiges Waisenkind verschenkt alles. Plötzlich fallen Sterne als Goldtaler vom Himmel.","As Moedas de Estrelas","Uma órfã generosa dá tudo o que tem e, de repente, estrelas caem do céu transformadas em moedas de ouro.","⭐🪙"],
+["Der Hase und der Igel","Ein Igel schlägt den Hasen im Wettlauf, weil seine Frau schon am Ziel wartet: ein listiger Trick.","A Lebre e o Ouriço","O ouriço vence a lebre numa corrida graças a um truque: a esposa dele, idêntica, espera na chegada.","🐇🦔"],
+["Tischlein deck dich, Goldesel und Knüppel aus dem Sack","Drei Brüder erhalten ein Tischlein, einen Goldesel und einen Knüppel mit Zauberkräften.","Mesinha, Põe-te","Três irmãos ganham uma mesa que se põe sozinha, um burro que cospe ouro e um bastão mágico.","🍽️🪄"],
+["Der Teufel mit den drei goldenen Haaren","Ein Glückskind soll dem Teufel drei goldene Haare holen, um die Königstochter zu heiraten.","Os Três Cabelos de Ouro do Diabo","Um menino de sorte precisa arrancar três fios de ouro do diabo para se casar com a princesa.","😈"],
+["Die Wichtelmänner","Nachts nähen kleine Wichtel Schuhe für einen armen Schuhmacher, bis er sie entdeckt und beschenkt.","Os Duendes e o Sapateiro","Duendes fazem sapatos à noite para um sapateiro pobre, até serem descobertos e presenteados por ele.","👞🧚"],
+["Schneeweißchen und Rosenrot","Zwei Schwestern nehmen einen Bären auf und retten einen undankbaren Zwerg. Der Bär ist ein Prinz.","Branca de Neve e Rosa Vermelha","Duas irmãs acolhem um urso e enfrentam um anão ingrato; no fim, o urso se revela um príncipe.","🐻🌹"],
+["Brüderchen und Schwesterchen","Ein Mädchen sorgt für sein Brüderchen, das eine böse Stiefmutter in ein Reh verwandelt hat.","Os Dois Irmãozinhos","A menina cuida do irmão, transformado em cervo por uma madrasta feiticeira.","🦌"],
+["Die Gänsemagd","Eine Prinzessin wird von ihrer Magd verdrängt und muss Gänse hüten, bis die Wahrheit ans Licht kommt.","A Guardadora de Gansos","Uma princesa tem o lugar roubado pela criada e vira guardadora de gansos até provar quem é.","🦆👸"]];
+let ord,i,ok,ko,fl;
+const $=s=>document.querySelector(s),g=$("#game");
+function start(){ord=[...T.keys()].sort(()=>Math.random()-.5);i=0;ok=ko=0;show()}
+function head(){$("#n").textContent=i<T.length?`Carta ${i+1} de ${T.length}`:"Fim";$("#sc").textContent=`Acertos ${ok} · Erros ${ko}`}
+function show(){fl=false;head();if(i>=T.length)return end();const t=T[ord[i]],h=(ord[i]*47)%360;
+g.innerHTML=`<div class="scene" id="sc2"><div class="card" id="cd"><div class="face"><div class="tag">Auf Deutsch</div><p class="de">${t[0]}</p><p class="tx">${t[1]}</p><p class="hint">Toque para virar</p></div><div class="face back"><div class="cover" style="background:hsl(${h} 38% 30%)">${t[4]}</div><div class="pt"><div class="tag">Em português</div><h2>${t[2]}</h2><p class="tx">${t[3]}</p></div></div></div></div><div class="row" id="rw"><button class="p" id="fb">Virar carta</button></div>`;
+$("#sc2").onclick=$("#fb").onclick=flip}
+function flip(){if(fl)return;fl=true;$("#cd").classList.add("f");$("#rw").innerHTML=`<button id="a" class="p">Acertei</button><button id="e">Errei</button>`;$("#a").onclick=()=>nx(1);$("#e").onclick=()=>nx(0)}
+function nx(w){w?ok++:ko++;i++;show()}
+function end(){g.innerHTML=`<div class="end"><p>Sua pontuação</p><b>${ok} / ${T.length}</b><p class="sub">${ok>=T.length*.8?"Mestre dos contos!":ok>=T.length*.5?"Muito bem!":"Continue lendo os Grimm!"}</p><div class="row" style="justify-content:center"><button class="p" id="r">Jogar de novo</button></div></div>`;$("#r").onclick=start}
+document.onkeydown=e=>{if(e.code==="Space"&&i<T.length){e.preventDefault();flip()}};
+start();
+</script></body></html>
